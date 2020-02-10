@@ -156,6 +156,8 @@ class AccommodationService {
    */
   static async getAccommodationLikes(req) {
     const { accommodationId } = req.params;
+    const { id } = req.user;
+
     const likeCounter = await CommonQueries.count(likes, {
       where: {
         accommodationId,
@@ -168,7 +170,20 @@ class AccommodationService {
         disliked: true
       }
     });
-    return { likeCounter, dislikeCounter };
+    const allAboutLikesAndDislike = await CommonQueries.findAll(likes, {
+      where: {
+        accommodationId,
+      },
+    });
+    const allAboutWhoReacted = allAboutLikesAndDislike.map(item => {
+      if (item.userId === id) {
+        return {
+          like: item.liked, userId: item.userId, accommodationId: item.accommodationId, dislike: item.disliked
+        };
+      }
+    });
+
+    return { likeCounter, dislikeCounter, allAboutWhoReacted };
   }
 
   /**
